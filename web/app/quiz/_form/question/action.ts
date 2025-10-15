@@ -1,9 +1,7 @@
 "use server"
 
+import { QUIZException } from "@/handlers/exceptions-service";
 import { getQuestionRandomQuestion } from "@/service/random-question";
-
-
-
 
 // Action que dispara a busca pro service que retorna a questão com base no id aleatório
 export const SendQuestionsAndAnswers = async (currentState: unknown, formData: FormData) => {
@@ -19,26 +17,23 @@ export const SendQuestionsAndAnswers = async (currentState: unknown, formData: F
 
         // Verifica se retornou algum tipo de erro
         if(response.code != 0 || response.erro || !response.sucess){
-
-            // Retorna a mensagem recebida
-            return {
-                error: response.message,
-                question: false
-            }
+            throw new QUIZException( response.message, response.code);
         }
-
-
 
         // Caso passe por todas as validações, cai no caso de sucesso e retorna a msg e a questão
         return {
+            success: true,
             message: response.message,
-            question: response.question
+            question: response.question,
+            error: false
         }
     } catch (error) {
-        console.log('erro durante o envio das repostas: in action')
         // Retorna um estado de erro para o useActionState
         return {
-            error: "Ocorreu um erro ao processar a solicitação."
+            success: false,
+            message: (error instanceof QUIZException ? error.message : 'Ocorreu um erro inesperado na busca da questão.'),
+            question: false,
+            error: (error instanceof QUIZException ? error.code : 2),
         }
     }
 }

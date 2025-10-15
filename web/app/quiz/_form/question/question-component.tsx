@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Progress } from "@/components/ui/progress"
 import { TextAnimate } from "@/components/ui/text-animate"
+import { toast, Toaster } from "sonner"
 
 export default function QuestionComponent() {
   // Estado para acompanhar o envio da resposta e o carregamento
@@ -44,6 +45,8 @@ export default function QuestionComponent() {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false)
   // Controla quando deve mostrar a resposta
   const [showResponse, setShowResponse] = useState(false)
+  // Estado para rastrear a última mensagem de erro
+  const [lastErrorMessage, setLastErrorMessage] = useState<string | null>(null)
 
   // Valida se a página inicializa, sendo assim chama a consulta das questões
   useEffect(() => {
@@ -53,6 +56,7 @@ export default function QuestionComponent() {
         numberRandom = 1
       } while (id_questions.includes(numberRandom))
       console.log("cai no useeffect")
+
       // Adiciona o novo ID
       setIdQuestion([...id_questions, numberRandom])
       // Marca que inicializou para não repetir
@@ -88,14 +92,28 @@ export default function QuestionComponent() {
     })
   }
 
+  // Definição da mensagem de erro
+  const errorMessage = state?.success === false && state?.error ? state.message : null
+
+  // useEffect para monitorar erros
+  useEffect(() => {
+    if (errorMessage && errorMessage !== lastErrorMessage) {
+      toast.error(errorMessage, {
+        position: "top-right",
+        duration: 5000,
+      })
+      setLastErrorMessage(errorMessage)
+    }
+  }, [errorMessage])
+
   // Responsável por controlar a paginação
   const handleNextQuestion = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
-    // Se já estiver true (resposta já está visivel)
+    // Se já estiver true (resposta já está visível)
     if (showResponse) {
-      //Valida se a pagina atual e menor do que a pagina final - 1 (se for menor que dizer que está dentro do limite).
+      // Valida se a página atual é menor do que a página final - 1
       if (pageIndex < amount_question - 1) {
-        // Seta o pageIndex  + 1
+        // Seta o pageIndex + 1
         setPageIndex((prev) => prev + 1)
       } else {
         setIsDialogOpen(true)
@@ -117,9 +135,10 @@ export default function QuestionComponent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
+        <Toaster />
         <form action={action} className="space-y-8">
           {/* Elemento do topo */}
-          {!isPending && question ? (
+          {!isPending && question && !lastErrorMessage ? (
             <>
               <motion.div
                 className="flex justify-between items-center"
@@ -215,14 +234,16 @@ export default function QuestionComponent() {
             </>
           ) : (
             <motion.div
-              className="flex items-center justify-center py-20"
+              className="flex items-center justify-center py-20 min-h-[400px]" // Altura mínima para consistência
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
               <div className="text-center space-y-4">
                 <Spinner size="small" className="mx-auto" />
-                <p className="text-muted-foreground">Carregando pergunta...</p>
+                <p className="text-muted-foreground">
+                  {lastErrorMessage ? "Erro ao carregar pergunta" : "Carregando pergunta..."}
+                </p>
               </div>
             </motion.div>
           )}
@@ -231,13 +252,13 @@ export default function QuestionComponent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
-            className="flex justify-center pt-4"
+            className="flex justify-center pt-4 min-h-[80px]"
           >
             <Button
               type="button"
-              disabled={isButtonDisabled || isPending || isPendingInitialRequest}
+              disabled={isButtonDisabled || isPending || isPendingInitialRequest || !!lastErrorMessage}
               className={`w-full py-3 text-base font-medium rounded-b-sm transition-all duration-300 cursor-pointer ${
-                isButtonDisabled || isPending || isPendingInitialRequest
+                isButtonDisabled || isPending || isPendingInitialRequest || !!lastErrorMessage
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:scale-105 hover:shadow-lg active:scale-95"
               }`}
