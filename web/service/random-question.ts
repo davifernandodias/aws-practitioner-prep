@@ -1,29 +1,49 @@
 import { QUIZException } from '@/handlers/exceptions-service';
 import dataJson from '../data/data_question.json';
+import { treatsGroup } from '@/utils/service-utils';
 
 export async function getQuestionRandomQuestion(
   id: number,
-  group_by_topic?: string,
-  level_of_complexity?: number
+  groupByTopic?: string | boolean,
+  levelOfComplexity?: number
 ) {
   try {
 
-    // Recupera o JSON e atribui a uma variavel
-    let data = dataJson[id];
+    let filteredData: any = null;
 
-    // Verifica se conseguiu acessar o JSON mas não achou o JSON correto
-    if(data === undefined){
-      // Passa a exceção tratada
-      throw new QUIZException("Erro durante a criação das perguntas! Entre em contato com o desenvolvedor.",  1);
+    // Filtra pelo grupo se for informado como string
+    let nameTreatedGroup: string | null | boolean = null;
+    if (typeof groupByTopic === 'string') {
+      nameTreatedGroup = treatsGroup(groupByTopic);
+
+
+      console.log("dead")
+
+      if (!nameTreatedGroup) {
+        throw new QUIZException("Erro durante a criação das perguntas, não foi possível encontrar a área! Entre em contato com o desenvolvedor.",1);
+      }
+
+      // Filtra o array pelo id e pelo grupo tratado
+      filteredData = dataJson.find(
+        (q: any) => q.id === id && treatsGroup(q.group_by_topic) === nameTreatedGroup
+      );
+    } else {
+      // Filtra apenas pelo id
+      filteredData = dataJson.find((q: any) => q.id === id);
     }
 
-    // Se passou do if acima deu tudo certo e retorna a mensagem correta
+    // Verifica se encontrou algum item
+    if (!filteredData) {
+      throw new QUIZException("Erro durante a criação das perguntas! Questão não encontrada ou grupo não corresponde.",1);
+    }
+
+    // Retorna sucesso
     return {
       sucess: true,
       message: "Questão criada com sucesso.",
-      question: data,
+      question: filteredData,
       erro: false,
-      code: 0,
+      code: 0
     };
 
   } catch (error : any) {

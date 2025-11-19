@@ -9,11 +9,16 @@ export const SendQuestionsAndAnswers = async (currentState: unknown, formData: F
         // Salva os ids recebidos (string)
         const stringIds = formData.get("id_array");
 
+        const paramGroupByTopic     = formData.get("groupByTopic");
+
         // confere se stringIds existe e é string, se sim converte para numero e passa pra um array
         const arrayIds = typeof stringIds === "string" ? stringIds.split(",").map(Number) : [];
 
+        // confere se chegou ou não o group para filtrar a pergunta
+        const groupByTopic = typeof paramGroupByTopic === "string" ? paramGroupByTopic : false;
+
         // Consulta via service serve side (utilizado o primeiro id)
-        const response = await getQuestionRandomQuestion(arrayIds[0])
+        const response = await getQuestionRandomQuestion(arrayIds[0], groupByTopic);
 
         // Verifica se retornou algum tipo de erro
         if(response.code != 0 || response.erro || !response.sucess){
@@ -33,7 +38,7 @@ export const SendQuestionsAndAnswers = async (currentState: unknown, formData: F
             success: false,
             message: (error instanceof QUIZException ? error.message : 'Ocorreu um erro inesperado na busca da questão.'),
             question: false,
-            error: (error instanceof QUIZException ? error.code : 2),
+            error: (error instanceof QUIZException ? error.code : 2)
         }
     }
 }
