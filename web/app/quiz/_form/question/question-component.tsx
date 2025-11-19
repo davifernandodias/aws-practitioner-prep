@@ -21,6 +21,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { Progress } from "@/components/ui/progress"
 import { TextAnimate } from "@/components/ui/text-animate"
 import { toast, Toaster } from "sonner"
+import { useQuestionValidation } from "@/hooks/which-question-is-correct"
 
 export default function QuestionComponent() {
   // Estado para acompanhar o envio da resposta e o carregamento
@@ -49,6 +50,12 @@ export default function QuestionComponent() {
   const [showResponse, setShowResponse] = useState(false)
   // Estado para rastrear a última mensagem de erro
   const [lastErrorMessage, setLastErrorMessage] = useState<string | null>(null)
+  // Seta a question com as restrições
+  const question: Question | null = state?.question && typeof state.question !== "boolean" ? state.question : null
+  // Definição da mensagem de erro
+  const errorMessage = state?.success === false && state?.error ? state.message : null
+
+
 
   // Valida se a página inicializa, sendo assim chama a consulta das questões
   useEffect(() => {
@@ -80,10 +87,14 @@ export default function QuestionComponent() {
   }, [pageIndex, amount_question])
 
   // Responsável por realizar primeira consulta na action
-  const handleRequestInitialQuestion = (id: number) => {
+  const handleRequestInitialQuestion = (id: number, group: string | null = null) => {
     setPendingInitialRequest(true)
     const formData = new FormData()
     formData.append("id_array", id.toString())
+    // Verifica se foi informado o group
+    if(group != null){
+      formData.append("groupByTopic", group);
+    }
 
     startTransition(() => {
       try {
@@ -93,9 +104,6 @@ export default function QuestionComponent() {
       }
     })
   }
-
-  // Definição da mensagem de erro
-  const errorMessage = state?.success === false && state?.error ? state.message : null
 
   // useEffect para monitorar erros
   useEffect(() => {
@@ -108,25 +116,46 @@ export default function QuestionComponent() {
     }
   }, [errorMessage])
 
+  // Hook para mapear qual respota e a certa e devolver a se está certo ou não
+  const { isCorrect, weakestTopic } = useQuestionValidation(question, selectedAnswers);
+
   // Responsável por controlar a paginação
   const handleNextQuestion = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    if(FormData)
-    // Se já estiver true (resposta já está visível)
+    setIsButtonDisabled(true);
+    // Se já estiver true (resposta visível)
     if (showResponse) {
-      // Valida se a página atual é menor do que a página final - 1
-      if (pageIndex < amount_question - 1) {
-        // Seta o pageIndex + 1
-        setPageIndex((prev) => prev + 1)
-      } else {
-        setIsDialogOpen(true)
-      }
-    }
 
-    // Mostra resposta
-    setShowResponse(!showResponse)
-  }
+      if (pageIndex < amount_question - 1) {
+        setPageIndex((prev) => prev + 1);
+      } else {
+        setIsDialogOpen(true);
+      }
+
+      // Gero o numero aleatorio
+      let numberRandom
+      do {
+        numberRandom = 1
+      } while (id_questions.includes(numberRandom))
+      console.log("gerei a nova pergunta")
+      // Informo o numero aleatório, porém, passo o proximo grupo também
+      handleRequestInitialQuestion(numberRandom, weakestTopic)
+
+
+      // Limpo os checkbox selecionados
+      setSelectedAnswers([]);
+    }
+    // Alterna a visibilidade da resposta
+    setShowResponse((prev) => !prev);
+
+    // Reativa o botão após 3 segundos
+    if(!showResponse && selectedAnswers){
+      setTimeout(() => {
+        setIsButtonDisabled(false);
+      }, 3000);
+    }
+  };
 
   // Função responsavel por salvar os valores das alternativas selecionadas e validar se está correto
   const handleCheckboxChange = (index: number) => {
@@ -159,11 +188,6 @@ export default function QuestionComponent() {
       return updated
     })
   }
-
-
-
-  // Seta a question com as restrições
-  const question: Question | null = state?.question && typeof state.question !== "boolean" ? state.question : null
 
   return (
     <div className="min-h-screen bg-background">
