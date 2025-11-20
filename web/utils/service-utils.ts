@@ -1,7 +1,7 @@
 export function treatsGroup(groupName: string): string | false {
     switch (groupName.toLowerCase()) {
         case 'compute':
-            return 'Conceito da Nuvem';
+            return 'Conceitos de Nuvem';
         case 'storage':
             return 'seguranca';
         case 'database':
