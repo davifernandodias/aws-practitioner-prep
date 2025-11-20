@@ -16,20 +16,16 @@ export async function getQuestionRandomQuestion(
     if (typeof groupByTopic === 'string') {
       nameTreatedGroup = treatsGroup(groupByTopic);
 
-
-      console.log("dead")
-
       if (!nameTreatedGroup) {
         throw new QUIZException("Erro durante a criação das perguntas, não foi possível encontrar a área! Entre em contato com o desenvolvedor.",1);
       }
 
       // Filtra o array pelo id e pelo grupo tratado
-      filteredData = dataJson.find(
-        (q: any) => q.id === id && treatsGroup(q.group_by_topic) === nameTreatedGroup
-      );
+      filteredData = dataJson.find((q: any) => q.id == id && q.group_by_topic == nameTreatedGroup);
+
     } else {
       // Filtra apenas pelo id
-      filteredData = dataJson.find((q: any) => q.id === id);
+      filteredData = dataJson.find((q: any) => q.id == id);
     }
 
     // Verifica se encontrou algum item
