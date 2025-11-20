@@ -3,7 +3,9 @@ import { useMeasurementTopics } from "@/store/configuration-question";
 
 export const useQuestionValidation = (
   question: Question | null,
-  selectedAnswers: number[]
+  selectedAnswers: number[],
+  errorStreak: ErrorStreak,
+  setErrorStreak: (streak: ErrorStreak) => void
 ) => {
   const topics = useMeasurementTopics();
 

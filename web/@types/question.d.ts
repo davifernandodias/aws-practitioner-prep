@@ -9,8 +9,6 @@ type ResponseItem = {
   rep: boolean
 }
 
-
-
 // Questão tem uma estrutura simples, formado pelo seu id, titulo, grupo (segurança, computação etc..) e se aceita duas alternativas e o array de objectos da resposta
 type Question = {
   id: number;
@@ -20,7 +18,6 @@ type Question = {
   level_of_complexity: number;
   response: Array<ResponseItem>;
 };
-
 
 // Controlador implementado no store, basicamente e a lógica que consegue controlar quais questões deve buscar no json, a lógica e simples, e similar a redação do enem
 // Começa com 100% e de acordo o erro do usuario vai diminuindo e o mesmo vale para acerto que no caso aumenta o valor
@@ -45,3 +42,6 @@ type ConfigurationState = {
   setAmountQuestion: (value: number) => void;
   setIdQuestion: (value: number[]) => void;
 };
+
+// Type usado na implementação de geração de próximas questões
+type ErrorStreak = Record<string, number>;

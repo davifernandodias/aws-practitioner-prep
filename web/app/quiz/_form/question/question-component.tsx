@@ -55,7 +55,8 @@ export default function QuestionComponent() {
   const question: Question | null = state?.question && typeof state.question !== "boolean" ? state.question : null
   // Definição da mensagem de erro
   const errorMessage = state?.success === false && state?.error ? state.message : null
-
+  // Controla quantas questões o estudante errou no mesmo tópico
+  const [errorStreak, setErrorStreak] = useState<Record<string, number>>({ compute: 0, storage: 0, database: 0, networking_and_content_delivery: 0, security_identity_and_compliance: 0 });
 
 
   // Valida se a página inicializa, sendo assim chama a consulta das questões
@@ -122,7 +123,7 @@ export default function QuestionComponent() {
   }, [errorMessage])
 
   // Hook para mapear qual respota e a certa e devolver a se está certo ou não
-  const { isCorrect, weakestTopic } = useQuestionValidation(question, selectedAnswers);
+  const { isCorrect, weakestTopic } = useQuestionValidation(question, selectedAnswers, errorStreak, setErrorStreak);
 
   // Responsável por controlar a paginação
   const handleNextQuestion = (event: React.MouseEvent<HTMLButtonElement>) => {
