@@ -22,6 +22,7 @@ import { Progress } from "@/components/ui/progress"
 import { TextAnimate } from "@/components/ui/text-animate"
 import { toast, Toaster } from "sonner"
 import { useQuestionValidation } from "@/hooks/which-question-is-correct"
+import { generateRandomNumber } from "@/utils/service-utils"
 
 export default function QuestionComponent() {
   // Estado para acompanhar o envio da resposta e o carregamento
@@ -60,19 +61,23 @@ export default function QuestionComponent() {
   // Valida se a página inicializa, sendo assim chama a consulta das questões
   useEffect(() => {
     if (initializeQuestions === 0) {
-      let numberRandom
-      do {
-        numberRandom = 1
-      } while (id_questions.includes(numberRandom))
-      console.log("cai no useeffect")
+      let numberRandom = null;
 
-      // Adiciona o novo ID
-      setIdQuestion([...id_questions, numberRandom])
-      // Marca que inicializou para não repetir
-      setInitializeQuestion(1)
+      while(true){
+        // === TROCAR QUANDO TIVER EM PRODUÇÃO===
+        numberRandom = generateRandomNumber(1, 2)
+        if(!id_questions.includes(numberRandom)){
+          // Adiciona o novo ID
+          setIdQuestion([...id_questions, numberRandom])
 
-      // Dispara a request para action
-      handleRequestInitialQuestion(numberRandom)
+          // Marca que inicializou para não repetir
+          setInitializeQuestion(1)
+
+          // Dispara a request para action
+          handleRequestInitialQuestion(numberRandom)
+          break;
+        }
+      }
     }
   }, [])
 
@@ -133,12 +138,20 @@ export default function QuestionComponent() {
         setIsDialogOpen(true);
       }
 
-      // Gero o numero aleatorio
-      let numberRandom
-      do {
-        numberRandom = 1
-      } while (id_questions.includes(numberRandom))
-      console.log("gerei a nova pergunta")
+      // Gero o numero aleatorio // =========== TROCAR QUANDO FOR PRA PROD ==================
+      let numberRandom = null;
+
+      while(true){
+        // Gera o numero aleatorio
+        numberRandom  = generateRandomNumber(1,2);
+        // Verifica se o numero gerado não está nos ids gerados anteriormente
+        if(!(id_questions.includes(numberRandom))){
+          // Adiciona o novo id na lista de ids buscados
+          setIdQuestion([...id_questions, numberRandom])
+          break
+        }
+      }
+
       // Informo o numero aleatório, porém, passo o proximo grupo também
       handleRequestInitialQuestion(numberRandom, weakestTopic)
 
